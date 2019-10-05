@@ -84,8 +84,12 @@ class XML_preprocessor(object):
 
         return one_hot_vector
 
-## example on how to use it
-# import pickle
-# data = XML_preprocessor('VOC2007/Annotations/').data
-# pickle.dump(data,open('VOC2007.p','wb'))
-
+# example on how to use it
+import pathlib
+import pickle
+self_path = pathlib.Path(__file__).parent
+anno_path = (self_path / ".." / ".." / "VOCdevkit" / "VOC2007" / "Annotations").resolve()
+anno_path = str(anno_path) + "/"
+gt_path = self_path / ".." / "gt_pascal.pkl"
+data = XML_preprocessor(str(anno_path)).data
+pickle.dump(data, gt_path.open("wb"))
