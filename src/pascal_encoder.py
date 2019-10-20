@@ -1,6 +1,21 @@
 import numpy as np
 import os
+import pathlib
+import pickle
 from xml.etree import ElementTree
+
+# Address 0 is background class
+voc_classes = [
+    None, 'Aeroplane', 'Bicycle', 'Bird', 'Boat', 'Bottle', 'Bus', 'Car',
+    'Cat', 'Chair', 'Cow', 'Diningtable', 'Dog', 'Horse','Motorbike',
+    'Person', 'Pottedplant', 'Sheep', 'Sofa', 'Train', 'Tvmonitor'
+]
+
+def make_groundtruth(anno_path: pathlib.Path, save_path: pathlib.Path):
+    anno_path = anno_path.resolve()
+    anno_path = str(anno_path) + "/"
+    data = XML_preprocessor(str(anno_path)).data
+    pickle.dump(data, save_path.open("wb"))
 
 class XML_preprocessor(object):
 
@@ -15,25 +30,27 @@ class XML_preprocessor(object):
         for filename in filenames:
             tree = ElementTree.parse(self.path_prefix + filename)
             root = tree.getroot()
-            bounding_boxes = []
-            one_hot_classes = []
+            image_name = root.find('filename').text
+
             size_tree = root.find('size')
             width = float(size_tree.find('width').text)
             height = float(size_tree.find('height').text)
+
+            bounding_boxes = []
+            one_hot_classes = []
             for object_tree in root.findall('object'):
-                for bounding_box in object_tree.iter('bndbox'):
-                    xmin = float(bounding_box.find('xmin').text)/width
-                    ymin = float(bounding_box.find('ymin').text)/height
-                    xmax = float(bounding_box.find('xmax').text)/width
-                    ymax = float(bounding_box.find('ymax').text)/height
-                bounding_box = [xmin,ymin,xmax,ymax]
-                bounding_boxes.append(bounding_box)
                 class_name = object_tree.find('name').text
+                bounding_box = object_tree.find('bndbox')
+                xmin = float(bounding_box.find('xmin').text) / width
+                ymin = float(bounding_box.find('ymin').text) / height
+                xmax = float(bounding_box.find('xmax').text) / width
+                ymax = float(bounding_box.find('ymax').text) / height
+
+                bounding_box = [xmin, ymin, xmax, ymax]
+                bounding_boxes.append(bounding_box)
                 one_hot_class = self._to_one_hot(class_name)
                 one_hot_classes.append(one_hot_class)
-            image_name = root.find('filename').text
-            bounding_boxes = np.asarray(bounding_boxes)
-            one_hot_classes = np.asarray(one_hot_classes)
+
             image_data = np.hstack((bounding_boxes, one_hot_classes))
             self.data[image_name] = image_data
 
@@ -83,13 +100,3 @@ class XML_preprocessor(object):
             print('unknown label: %s' %name)
 
         return one_hot_vector
-
-# example on how to use it
-import pathlib
-import pickle
-self_path = pathlib.Path(__file__).parent
-anno_path = (self_path / ".." / ".." / "VOCdevkit" / "VOC2007" / "Annotations").resolve()
-anno_path = str(anno_path) + "/"
-gt_path = self_path / ".." / "gt_pascal.pkl"
-data = XML_preprocessor(str(anno_path)).data
-pickle.dump(data, gt_path.open("wb"))
