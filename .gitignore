@@ -93,5 +93,7 @@ ENV/
 # Rope project settings
 .ropeproject
 
+.pytest_cache
 /.vscode/
 /checkpoints/
+/data/VOCdevkit/

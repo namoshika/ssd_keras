@@ -1,5 +1,3 @@
-"""Keras implementation of SSD."""
-
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -9,54 +7,57 @@ class SSD300(keras.Model):
     def __init__(self, input_shape, num_classes):
         """SSD300 architecture.
 
-        # Arguments
-            input_shape: Shape of the input image,
-                expected to be either (300, 300, 3) or (3, 300, 300)(not tested).
-            num_classes: Number of classes including background.
+        Arguments
+        --------------------
+        input_shape: Shape of the input image, expected to be either (300, 300, 3).
+        num_classes: Number of classes including background.
 
-        # References
-            https://arxiv.org/abs/1512.02325
+        References
+        --------------------
+        https://arxiv.org/abs/1512.02325
         """
         super().__init__()
+        # add background class
+        num_classes += 1
         # Block 1 (shape: 300 -> 150)
-        self.conv1_1 = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1')
-        self.conv1_2 = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2')
-        self.pool1 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool1')
+        self.conv1_1 = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_1', dtype=tf.float32)
+        self.conv1_2 = layers.Conv2D(64, (3, 3), activation='relu', padding='same', name='conv1_2', dtype=tf.float32)
+        self.pool1 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool1', dtype=tf.float32)
         # Block 2 (shape: 150 -> 75)
-        self.conv2_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1')
-        self.conv2_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2')
-        self.pool2 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool2')
+        self.conv2_1 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_1', dtype=tf.float32)
+        self.conv2_2 = layers.Conv2D(128, (3, 3), activation='relu', padding='same', name='conv2_2', dtype=tf.float32)
+        self.pool2 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool2', dtype=tf.float32)
         # Block 3 (shape: 75 -> 38)
-        self.conv3_1 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1')
-        self.conv3_2 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_2')
-        self.conv3_3 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_3')
-        self.pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool3')
+        self.conv3_1 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_1', dtype=tf.float32)
+        self.conv3_2 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_2', dtype=tf.float32)
+        self.conv3_3 = layers.Conv2D(256, (3, 3), activation='relu', padding='same', name='conv3_3', dtype=tf.float32)
+        self.pool3 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool3', dtype=tf.float32)
         # Block 4 (shape: 38 -> 19)
-        self.conv4_1 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1')
-        self.conv4_2 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_2')
-        self.conv4_3 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3')
-        self.pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool4')
+        self.conv4_1 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_1', dtype=tf.float32)
+        self.conv4_2 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_2', dtype=tf.float32)
+        self.conv4_3 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv4_3', dtype=tf.float32)
+        self.pool4 = layers.MaxPooling2D((2, 2), strides=(2, 2), padding='same', name='pool4', dtype=tf.float32)
         # Block 5 (shape: 19 -> 19)
-        self.conv5_1 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_1')
-        self.conv5_2 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_2')
-        self.conv5_3 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_3')
-        self.pool5 = layers.MaxPooling2D((3, 3), strides=(1, 1), padding='same', name='pool5')
+        self.conv5_1 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_1', dtype=tf.float32)
+        self.conv5_2 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_2', dtype=tf.float32)
+        self.conv5_3 = layers.Conv2D(512, (3, 3), activation='relu', padding='same', name='conv5_3', dtype=tf.float32)
+        self.pool5 = layers.MaxPooling2D((3, 3), strides=(1, 1), padding='same', name='pool5', dtype=tf.float32)
         # FC6 (shape: 19 -> 19)
-        self.fc6 = layers.Conv2D(1024, (3, 3), dilation_rate=(6, 6), activation='relu', padding='same', name='fc6')
+        self.fc6 = layers.Conv2D(1024, (3, 3), dilation_rate=(6, 6), activation='relu', padding='same', name='fc6', dtype=tf.float32)
         # FC7 (shape: 19 -> 19)
-        self.fc7 = layers.Conv2D(1024, (1, 1), activation='relu', padding='same', name='fc7')
+        self.fc7 = layers.Conv2D(1024, (1, 1), activation='relu', padding='same', name='fc7', dtype=tf.float32)
         # Block 6 (shape: 19 -> 10)
-        self.conv6_1 = layers.Conv2D(256, (1, 1), activation='relu', padding='same', name='conv6_1')
-        self.conv6_2 = layers.Conv2D(512, (3, 3), strides=(2, 2), activation='relu', padding='same', name='conv6_2')
+        self.conv6_1 = layers.Conv2D(256, (1, 1), activation='relu', padding='same', name='conv6_1', dtype=tf.float32)
+        self.conv6_2 = layers.Conv2D(512, (3, 3), strides=(2, 2), activation='relu', padding='same', name='conv6_2', dtype=tf.float32)
         # Block 7 (shape: 10 -> 5)
-        self.conv7_1 = layers.Conv2D(128, (1, 1), activation='relu', padding='same', name='conv7_1')
-        self.conv7_2_padding = layers.ZeroPadding2D()
-        self.conv7_2 = layers.Conv2D(256, (3, 3), strides=(2, 2), activation='relu', padding='valid', name='conv7_2')
+        self.conv7_1 = layers.Conv2D(128, (1, 1), activation='relu', padding='same', name='conv7_1', dtype=tf.float32)
+        self.conv7_2_padding = layers.ZeroPadding2D(dtype=tf.float32)
+        self.conv7_2 = layers.Conv2D(256, (3, 3), strides=(2, 2), activation='relu', padding='valid', name='conv7_2', dtype=tf.float32)
         # Block 8 (shape: 5 -> 3)
-        self.conv8_1 = layers.Conv2D(128, (1, 1), activation='relu', padding='same', name='conv8_1')
-        self.conv8_2 = layers.Conv2D(256, (3, 3), strides=(2, 2), activation='relu', padding='same', name='conv8_2')
+        self.conv8_1 = layers.Conv2D(128, (1, 1), activation='relu', padding='same', name='conv8_1', dtype=tf.float32)
+        self.conv8_2 = layers.Conv2D(256, (3, 3), strides=(2, 2), activation='relu', padding='same', name='conv8_2', dtype=tf.float32)
         # Last Pool (shape: (3, 3, 256) -> 256)
-        self.pool6 = layers.GlobalAveragePooling2D(name='pool6')
+        self.pool6 = layers.GlobalAveragePooling2D(name='pool6', dtype=tf.float32)
 
         # Prediction from conv4_3
         # loc (shape: (38, 38, 3 * 4) = 17328)
@@ -65,54 +66,54 @@ class SSD300(keras.Model):
         variances = [0.1, 0.1, 0.2, 0.2]
         aspect_ratios = [1.0, 2.0, 1/2]
         num_priors = len(aspect_ratios)
-        self.conv4_3_norm = Normalize(20, name='conv4_3_norm')
-        self.conv4_3_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv4_3_norm_mbox_loc')
-        self.conv4_3_boxloc_flat = layers.Flatten(name='conv4_3_norm_mbox_loc_flat')
-        self.conv4_3_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv4_3_norm_mbox_conf')
-        self.conv4_3_boxcnf_flat = layers.Flatten(name='conv4_3_norm_mbox_conf_flat')
+        self.conv4_3_norm = Normalize(20, name='conv4_3_norm', dtype=tf.float32)
+        self.conv4_3_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv4_3_norm_mbox_loc', dtype=tf.float32)
+        self.conv4_3_boxloc_flat = layers.Flatten(name='conv4_3_norm_mbox_loc_flat', dtype=tf.float32)
+        self.conv4_3_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv4_3_norm_mbox_conf', dtype=tf.float32)
+        self.conv4_3_boxcnf_flat = layers.Flatten(name='conv4_3_norm_mbox_conf_flat', dtype=tf.float32)
         conv4_3_priorbox = self.get_priorboxes(input_shape, 30.0, None, variances, aspect_ratios, (38, 38))
 
         # Prediction from fc7
         aspect_ratios = [1.0, 1.0, 2.0, 1/2, 3.0, 1/3]
         num_priors = len(aspect_ratios)
-        self.fc7_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='fc7_mbox_loc')
-        self.fc7_boxloc_flat = layers.Flatten(name='fc7_mbox_loc_flat')
-        self.fc7_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='fc7_mbox_conf')
-        self.fc7_boxcnf_flat = layers.Flatten(name='fc7_mbox_conf_flat')
+        self.fc7_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='fc7_mbox_loc', dtype=tf.float32)
+        self.fc7_boxloc_flat = layers.Flatten(name='fc7_mbox_loc_flat', dtype=tf.float32)
+        self.fc7_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='fc7_mbox_conf', dtype=tf.float32)
+        self.fc7_boxcnf_flat = layers.Flatten(name='fc7_mbox_conf_flat', dtype=tf.float32)
         fc7_priorbox = self.get_priorboxes(input_shape, 60.0, 114.0, variances, aspect_ratios, (19, 19))
 
         # Prediction from conv6_2
         aspect_ratios = [1.0, 1.0, 2.0, 1/2, 3.0, 1/3]
         num_priors = len(aspect_ratios)
-        self.conv6_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv6_2_mbox_loc')
-        self.conv6_2_boxloc_flat = layers.Flatten(name='conv6_2_mbox_loc_flat')
-        self.conv6_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv6_2_mbox_conf')
-        self.conv6_2_boxcnf_flat = layers.Flatten(name='conv6_2_mbox_conf_flat')
+        self.conv6_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv6_2_mbox_loc', dtype=tf.float32)
+        self.conv6_2_boxloc_flat = layers.Flatten(name='conv6_2_mbox_loc_flat', dtype=tf.float32)
+        self.conv6_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv6_2_mbox_conf', dtype=tf.float32)
+        self.conv6_2_boxcnf_flat = layers.Flatten(name='conv6_2_mbox_conf_flat', dtype=tf.float32)
         conv6_2_priorbox = self.get_priorboxes(input_shape, 114.0, 168.0, variances, aspect_ratios, (10, 10))
 
         # Prediction from conv7_2
         aspect_ratios = [1.0, 1.0, 2.0, 1/2, 3.0, 1/3]
         num_priors = len(aspect_ratios)
-        self.conv7_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv7_2_mbox_loc')
-        self.conv7_2_boxloc_flat = layers.Flatten(name='conv7_2_mbox_loc_flat')
-        self.conv7_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv7_2_mbox_conf')
-        self.conv7_2_boxcnf_flat = layers.Flatten(name='conv7_2_mbox_conf_flat')
+        self.conv7_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv7_2_mbox_loc', dtype=tf.float32)
+        self.conv7_2_boxloc_flat = layers.Flatten(name='conv7_2_mbox_loc_flat', dtype=tf.float32)
+        self.conv7_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv7_2_mbox_conf', dtype=tf.float32)
+        self.conv7_2_boxcnf_flat = layers.Flatten(name='conv7_2_mbox_conf_flat', dtype=tf.float32)
         conv7_2_priorbox = self.get_priorboxes(input_shape, 168.0, 222.0, variances, aspect_ratios, (5, 5))
 
         # Prediction from conv8_2
         aspect_ratios = [1.0, 1.0, 2.0, 1/2, 3.0, 1/3]
         num_priors = len(aspect_ratios)
-        self.conv8_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv8_2_mbox_loc')
-        self.conv8_2_boxloc_flat = layers.Flatten(name='conv8_2_mbox_loc_flat')
-        self.conv8_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv8_2_mbox_conf')
-        self.conv8_2_boxcnf_flat = layers.Flatten(name='conv8_2_mbox_conf_flat')
+        self.conv8_2_boxloc = layers.Conv2D(num_priors * 4, (3, 3), padding='same', name='conv8_2_mbox_loc', dtype=tf.float32)
+        self.conv8_2_boxloc_flat = layers.Flatten(name='conv8_2_mbox_loc_flat', dtype=tf.float32)
+        self.conv8_2_boxcnf = layers.Conv2D(num_priors * num_classes, (3, 3), padding='same', name='conv8_2_mbox_conf', dtype=tf.float32)
+        self.conv8_2_boxcnf_flat = layers.Flatten(name='conv8_2_mbox_conf_flat', dtype=tf.float32)
         conv8_2_priorbox = self.get_priorboxes(input_shape, 222.0, 276.0, variances, aspect_ratios, (3, 3))
 
         # Prediction from pool6
         aspect_ratios = [1.0, 1.0, 2.0, 1/2, 3.0, 1/3]
         num_priors = len(aspect_ratios)
-        self.pool6_boxloc_dense = layers.Dense(num_priors * 4, name='pool6_mbox_loc_flat')
-        self.pool6_boxcnf_dense = layers.Dense(num_priors * num_classes, name='pool6_mbox_conf_flat')
+        self.pool6_boxloc_dense = layers.Dense(num_priors * 4, name='pool6_mbox_loc_flat', dtype=tf.float32)
+        self.pool6_boxcnf_dense = layers.Dense(num_priors * num_classes, name='pool6_mbox_conf_flat', dtype=tf.float32)
         pool6_priorbox = self.get_priorboxes(input_shape, 276.0, 330.0, variances, aspect_ratios, (1, 1))
         
         # Gather all predictions
@@ -126,17 +127,19 @@ class SSD300(keras.Model):
             conv8_2_priorbox,
             pool6_priorbox
         ], axis=0)
-        self.boxloc1_1_concat = layers.Concatenate(axis=1, name='mbox_loc')
-        self.boxcnf1_1_concat = layers.Concatenate(axis=1, name='mbox_conf')
+        self.boxloc1_1_concat = layers.Concatenate(axis=1, name='mbox_loc', dtype=tf.float32)
+        self.boxcnf1_1_concat = layers.Concatenate(axis=1, name='mbox_conf', dtype=tf.float32)
         num_boxes = self.priorboxes.shape[0]
-        self.boxloc1_2_reshape = layers.Reshape((num_boxes, 4), name='mbox_loc_final')
-        self.boxcnf1_2_reshape = layers.Reshape((num_boxes, num_classes), name='mbox_conf_logits')
-        self.boxcnf1_3_act1 = layers.Activation('softmax', name='mbox_conf_final')
+        self.boxloc1_2_reshape = layers.Reshape((num_boxes, 4), name='mbox_loc_final', dtype=tf.float32)
+        self.boxcnf1_2_reshape = layers.Reshape((num_boxes, num_classes), name='mbox_conf_logits', dtype=tf.float32)
+        self.boxcnf1_3_act1 = layers.Activation('softmax', name='mbox_conf_final', dtype=tf.float32)
         self.boxloc1_3_zeros = layers.Lambda(lambda x: tf.zeros((x, self.priorboxes.shape[0], 1)), name="hard_nega_mining")
         # predictions shape: [data, layer_width * layer_height * prior_box, feature:(xmin, ymin, xmax, ymax, *classes, xmin, ymin, xmax, ymax, *variances)]
-        self.concat_all = layers.Concatenate(axis=2, name='predictions')
+        self.concat_all = layers.Concatenate(axis=2, name='predictions', dtype=tf.float32)
     
+    # @tf.function
     def call(self, x):
+        x = tf.cast(x, tf.float32)
         # Block 1 (shape: 300 -> 150)
         x = self.conv1_1(x)
         x = self.conv1_2(x)

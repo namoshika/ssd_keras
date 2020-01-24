@@ -1,8 +1,40 @@
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](LICENSE)
-# A port of [SSD: Single Shot MultiBox Detector](https://github.com/weiliu89/caffe/tree/ssd) to [Keras](https://keras.io) framework.
-For more details, please refer to [arXiv paper](http://arxiv.org/abs/1512.02325).
-For forward pass for 300x300 model, please, follow `SSD.ipynb` for examples. For training procedure for 300x300 model, please, follow `SSD_training.ipynb` for examples. Moreover, in `testing_utils` folder there is a useful script to test `SSD` on video or on camera input.
+# SSD: Single Shot MultiBox Detector on TensorFlow 2.0
+Implemented SSD300 in TensorFlow 2.0 (keras API).  
+This SSD300 has some improvements over the forked [repository](https://github.com/rykov8/ssd_keras).
 
-Weights are ported from the original models and are available [here](https://mega.nz/#F!7RowVLCL!q3cEVRK9jyOSB9el3SssIA). You need `weights_SSD300.hdf5`, `weights_300x300_old.hdf5` is for the old version of architecture with 3x3 convolution for `pool6`.
+1. Port to TF2.0 (Eager Execution + Keras API)
+2. Evaluate ROC curves, mAP Score.
+3. Remove predatas (gt_pascal.pkl, prior_boxes_ssd300.pkl).
+4. Remove output feature which didn't have trainable weights.
 
-This code was tested with `Keras` v1.2.2, `Tensorflow` v1.0.0, `OpenCV` v3.1.0-dev
+# Requirements
+* Python v3.7
+* TensorFlow v2.0
+* python_voc_parser v1.0.0
+* imgaug v0.3.0
+
+# Usage
+1. Open demo with VSCode or Jupyter.
+    * sample_demo.py: You can try predict and training. My work space (VSCode friendly. I'm attached to breakpoint. XD).
+    * sample_demo.ipynb: This is same as sample_demo.py.
+2. Run `# データセットをダウンロード` cell.  
+   Some minutes after... Downloaded the [PascalVOC 2007](http://host.robots.ox.ac.uk/pascal/VOC/) onto `./data`.
+   ```
+   ./data/VOCdevkit/VOC2007/
+                        |- Annotations
+                        |- ImageSets
+                        |- JPEGImages
+                        |- SegmentationClass
+                        |- SegmentationObject
+   ```
+3. Download the [weights_SSD300.hdf5](https://mega.nz/#F!7RowVLCL!q3cEVRK9jyOSB9el3SssIA) onto `./data`. This is weights was ported from the original models.
+   ```
+   ./data/weights_SSD300.hdf5
+   ```
+4. Run following cells... XD
+
+# Copyright
+Copyright (c) 2020 namoshika  
+
+This repository is forked https://github.com/rykov8/ssd_keras.  
+Copyright (c) 2016 Andrey Rykov  
